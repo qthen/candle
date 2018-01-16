@@ -92,17 +92,23 @@ class KeplerPeriodSpacing(AstroData):
 			a_apogee_id = apogee_data[1].data['APOGEE_ID'][idx_apogee[i]]
 			a_location_id = apogee_data[1].data['LOCATION_ID'][idx_apogee[i]]
 			local_path_to_file_for_star = combined_spectra(dr=14, location=a_location_id, apogee=a_apogee_id)
-			spectra_data = fits.open(local_path_to_file_for_star)
-			# Best fit spectra data - use for spectra data
-			spectra = spectra_data[3].data
+			if (local_path_to_file_for_star):
+				spectra_data = fits.open(local_path_to_file_for_star)
 
-			# KIC data
-			star_dict['KIC'].append(kic_table['KIC'][idx_kic[i]])
-			star_dict['RA'].append(kic_table['RA'][idx_kic[i]])
-			star_dict['DEC'].append(kic_table['DE'][idx_kic[i]])
-			star_dict['Dnu'].append(kic_table['Dnu'][idx_kic[i]])
-			star_dict['DPi1'].append(kic_table['DPi1'][idx_kic[i]])
-			star_dict['spectra'].append(spectra)
+				# Best fit spectra data - use for spectra data
+				spectra = spectra_data[3].data
+
+				# KIC data
+				star_dict['KIC'].append(kic_table['KIC'][idx_kic[i]])
+				star_dict['RA'].append(kic_table['RA'][idx_kic[i]])
+				star_dict['DEC'].append(kic_table['DE'][idx_kic[i]])
+				star_dict['Dnu'].append(kic_table['Dnu'][idx_kic[i]])
+				star_dict['DPi1'].append(kic_table['DPi1'][idx_kic[i]])
+				star_dict['spectra'].append(spectra.copy())
+
+				# Close file handler
+				del spectra_data
+				del spectra
 
 			# Check max condition
 			if i > max_number_of_stars - 1:

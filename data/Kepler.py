@@ -1,24 +1,33 @@
 # Class for generating 
-from AstroData import AstroData
+from data.AstroData import AstroData
 from astropy.table import Table
 from astropy.table import Column
 import numpy as np
 import os.path
+from astroNN.apogee import allstar
+from astropy.io import fits
+from astroNN.datasets.xmatch import xmatch
+from astroNN.apogee import combined_spectra
 
 class KeplerPeriodSpacing(AstroData):
 
 	'''
-	Returns a numpy array of SPECTRA and their corresponding astroseismic parameters as labels
+	Given the relevant files for the tables, returns a dict of data points, keys are the variable
+	Inputs:
+		max_number_of_stars - Maximum number of star data to return, by default returns all
+	Returns:
+		dict: { KIC, RA, DEC, SPECTRA , Dnu, Dpi1 }
 	'''
-	def get_data(self):
+	def get_data(self, max_number_of_stars = float("inf")):
 
-		if not os.path.exists('../tables/KIC_A87/table1.dat'):
+		# Creating the KIC_A87/table1.dat file which contains all the KIC stars with their RA and DEC
+		if not os.path.exists('tables//KIC_A87/table1.dat'):
 			# This gets me the PS and astroseismic parameters from the KIC, but not the RA or DE
-			data_ps = Table.read("../tables/A87/table2.dat", format="ascii")
+			data_ps = Table.read("tables/A87/table2.dat", format="ascii")
 
 			# This gets me the RA and DE of the stars above into a dict
 			data_ra_de = {}
-			with open("../tables/KIC_A87/data_0.csv") as fp:
+			with open("tables/KIC_A87/data_0.csv") as fp:
 				skip = False
 				for line in fp:
 					if not skip:
@@ -52,8 +61,54 @@ class KeplerPeriodSpacing(AstroData):
 
 			data_ps.write('../tables/KIC_A87/table1.dat' , format='ascii')
 
-		table_kic = Table.read('../tables/KIC_A87/table1.dat', format='ascii')
-		print(table_kic)
+		# APOGEE star data (no spectra)
+		local_path_to_file = allstar(dr=14)
+		apogee_data = fits.open(local_path_to_file)
+
+		# APOGEE celestical coordinates
+		apogee_ra = apogee_data[1].data['ra']
+		apogee_de = apogee_data[1].data['dec']
+
+		# KIC celestical coordinates
+		kic_table = Table.read("tables/KIC_A87/table1.dat", format="ascii")
+		kic_ra = np.array(kic_table['RA'])
+		kic_de = np.array(kic_table['DE'])
+
+		# Indices overlap between KIC and APOGEE
+		idx_kic, idx_apogee, sep = xmatch(kic_ra, apogee_ra, colRA1=kic_ra, colDec1 = kic_de, colRA2 = apogee_ra, colDec2 = apogee_de)
+
+		# Dict to return containing the star data
+		star_dict = {
+			'KIC'     : [],
+			'RA'      : [],
+			'DEC'     : [],
+			'Dnu'     : [],
+			'DPi1'    : [],
+			'spectra' : []
+		}
+
+		# Building spectra data for KIC from APOGEE
+		for i in range(0, len(idx_apogee)):
+			a_apogee_id = apogee_data[1].data['APOGEE_ID'][idx_apogee[i]]
+			a_location_id = apogee_data[1].data['LOCATION_ID'][idx_apogee[i]]
+			local_path_to_file_for_star = combined_spectra(dr=14, location=a_location_id, apogee=a_apogee_id)
+			spectra_data = fits.open(local_path_to_file_for_star)
+			# Best fit spectra data - use for spectra data
+			spectra = spectra_data[3].data
+
+			# KIC data
+			star_dict['KIC'].append(kic_table['KIC'][idx_kic[i]])
+			star_dict['RA'].append(kic_table['RA'][idx_kic[i]])
+			star_dict['DEC'].append(kic_table['DE'][idx_kic[i]])
+			star_dict['Dnu'].append(kic_table['Dnu'][idx_kic[i]])
+			star_dict['DPi1'].append(kic_table['DPi1'][idx_kic[i]])
+			star_dict['spectra'].append(spectra)
+
+			# Check max condition
+			if i > max_number_of_stars - 1:
+				break
+
+		return star_dict
 
 if __name__ == '__main__':
 	kepler_data = KeplerPeriodSpacing()

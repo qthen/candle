@@ -1,11 +1,11 @@
-# PCA implementation to reduce star spectra
-from sklearn.decomposition import PCA
+# ICA implementation to reduce star spectra
+from sklearn.decomposition import FastICA
 from models.spectra_embeddings.Embedding import Embedding
 
 '''
-Spectra embedding via PCA
+Spectra embedding via ICA
 '''
-class SpectralEmbeddingPCA(Embedding):
+class SpectralEmbeddingICA(Embedding):
 
 	'''
 	Constructs PCA for dimensionality reduction of the spectral data
@@ -13,19 +13,19 @@ class SpectralEmbeddingPCA(Embedding):
 	'''
 	def __init__(self, E_D = 10):
 		self.E_D = E_D
-		self.PCA = PCA(n_components=E_D)
+		self.FastICA = FastICA(n_components=E_D)
 
 
 	'''
 	Overriding from the Embedding class
 	'''
 	def fit(self, X):
-		self.PCA.fit(X)
+		self.FastICA.fit(X)
 
 
 	'''
 	Overriding from the Embedding class
 	'''
 	def embed(self, X): 
-		return self.PCA.transform(X)		
+		return self.FastICA.transform(X)		
 		

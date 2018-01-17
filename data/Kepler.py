@@ -8,6 +8,7 @@ from astroNN.apogee import allstar
 from astropy.io import fits
 from astroNN.datasets.xmatch import xmatch
 from astroNN.apogee import combined_spectra
+from astroNN.apogee.chips import gap_delete
 
 class KeplerPeriodSpacing(AstroData):
 
@@ -15,10 +16,11 @@ class KeplerPeriodSpacing(AstroData):
 	Given the relevant files for the tables, returns a dict of data points, keys are the variable
 	Inputs:
 		max_number_of_stars - Maximum number of star data to return, by default returns all
+		use_steps - If True then returns spectra that is usable for convolutional networks (batch_size, steps, 1)
 	Returns:
-		dict: { KIC, RA, DEC, SPECTRA , Dnu, Dpi1 }
+		dict: { KIC, RA, DEC, SPECTRA , Dnu, Dpi1 } -> np arrays
 	'''
-	def get_data(self, max_number_of_stars = float("inf")):
+	def get_data(self, max_number_of_stars = float("inf"), use_steps = False):
 
 		# Creating the KIC_A87/table1.dat file which contains all the KIC stars with their RA and DEC
 		if not os.path.exists('tables//KIC_A87/table1.dat'):
@@ -98,13 +100,23 @@ class KeplerPeriodSpacing(AstroData):
 				# Best fit spectra data - use for spectra data
 				spectra = spectra_data[3].data
 
+				# Filter out the dr=14 gaps
+				spectra_no_gap = gap_delete(spectra, dr=14)
+				spectra_no_gap = spectra_no_gap.flatten()
+
 				# KIC data
 				star_dict['KIC'].append(kic_table['KIC'][idx_kic[i]])
 				star_dict['RA'].append(kic_table['RA'][idx_kic[i]])
 				star_dict['DEC'].append(kic_table['DE'][idx_kic[i]])
 				star_dict['Dnu'].append(kic_table['Dnu'][idx_kic[i]])
 				star_dict['DPi1'].append(kic_table['DPi1'][idx_kic[i]])
-				star_dict['spectra'].append(spectra.copy())
+
+				# Gap delete doesn't return row vector, need to manually reshape
+				if not use_steps:
+					star_dict['spectra'].append(spectra_no_gap)
+				else:
+					# Need to reshape to steps
+					star_dict['spectra'].append(spectra_no_gap.reshape(spectra_no_gap.shape[0], 1))
 
 				# Close file handler
 				del spectra_data
@@ -114,6 +126,13 @@ class KeplerPeriodSpacing(AstroData):
 			if i > max_number_of_stars - 1:
 				break
 
+		# Convert to numpy arrays
+		star_dict['KIC'] = np.array(star_dict['KIC'])
+		star_dict['RA'] = np.array(star_dict['RA'])
+		star_dict['DEC'] = np.array(star_dict['DEC'])
+		star_dict['Dnu'] = np.array(star_dict['Dnu'])
+		star_dict['DPi1'] = np.array(star_dict['DPi1'])
+		star_dict['spectra'] = np.array(star_dict['spectra'])
 		return star_dict
 
 if __name__ == '__main__':

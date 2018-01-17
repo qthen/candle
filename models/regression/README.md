@@ -1,0 +1,1 @@
+Regression models for stellar parameters on stars that are inferred from stellar spectra. At the moment, classification of RC and RGB seems a bit difficult on where to draw the line, so I am seeing how well stellar spectra can be used to infer asteroseismic parameters that are strong dependencies for determining red-clump stars. 

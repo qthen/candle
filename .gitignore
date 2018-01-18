@@ -3,3 +3,5 @@ astroNN/
 mirror_data/
 astroNN.egg-info/
 setup.md
+pickles/kepler/stars1.pickle
+

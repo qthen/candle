@@ -5,7 +5,7 @@ from keras.optimizers import SGD, Adam
 import matplotlib.pyplot as plt
 
 # Constants to use to train the BaselineNN
-NUMBER_OF_STARS = 3000
+NUMBER_OF_STARS = 3100
 EMBEDDING_DIMENSION = 100
 
 # Optimizers
@@ -34,7 +34,7 @@ spectra_data = pca.embed(data['spectra'])
 # Model training and fitting
 model = BaselineNN(S_D = EMBEDDING_DIMENSION)
 model.compile(optimizer=adam_opt)
-history = model.fit(spectra_data, [data['DPi1'], data['Dnu']], validation_split=0.1, epochs = 100, batch_size = 32)
+history = model.fit(spectra_data, [data['DPi1'], data['Dnu']], validation_split=0.1, epochs = 1000, batch_size = 32)
 
 # Plot the training data
 plt.plot(history.history['loss'])

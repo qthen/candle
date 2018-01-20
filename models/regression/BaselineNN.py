@@ -1,6 +1,6 @@
 from keras.callbacks import EarlyStopping
 from keras.layers import Dense, Activation, Dropout, Input
-from keras.models import Model
+from keras.models import Model, load_model
 import services.ModelPerformanceVisualization as model_visualizer
 
 '''
@@ -9,25 +9,12 @@ does regression on asteroseismic parameters, and is easily adaptable to regressi
 
 Star spectra for this model should be dimensionally reduced prior to prediction due to the size of a large 
 fully connected layer and low count of training data
-
-100 epoch result
-loss                                    : 1611.0846
-DPi1_loss                               : 1610.5841
-Dnu_loss                                : 0.5005
-DPi1_mean_absolute_error                : 28.6636
-DPi1_mean_absolute_percentage_error     : 17.2518
-Dnu_mean_absolute_error                 : 0.4684
-Dnu_mean_absolute_percentage_error      : 7.1293
-val_loss                                : 1818.0663
-val_DPi1_loss                           : 1817.6984
-val_Dnu_loss                            : 0.3680
-val_DPi1_mean_absolute_error            : 27.0088
-val_DPi1_mean_absolute_percentage_error : 14.0153
-val_Dnu_mean_absolute_error             : 0.3383
-val_Dnu_mean_absolute_percentage_error  : 5.6662
 '''
 
 class BaselineNN(object):
+
+	# Constant for where to save this model
+	MODEL_FILEPATH = "models/regression/BaselineNN.h5"
 
 	'''
 	Creates the baseline NN with separate fully connected layers on stellar spectra
@@ -49,6 +36,7 @@ class BaselineNN(object):
 		prediction_dnu = Dense(1, activation='linear', name='Dnu')(dense_layer_2)
 
 		self.model = Model(inputs=[input_spectra], outputs=[prediction_ps, prediction_dnu])
+
 
 	'''
 	Compile the model given the optimizer, loss function, and the model architecture and metrics
@@ -99,5 +87,16 @@ class BaselineNN(object):
 	def judge(self, X, y):
 		y_PS, y_Dnu = y
 		y_pred_PS, y_pred_Dnu = self.predict(X)
-		model_visualizer.plot_ps_vs_pred_ps(y_PS, y_pred_PS)
-		model_visualizer.plot_dnu_vs_pred_dnu(y_Dnu, y_pred_Dnu)
+		model_visualizer.plot_all(y_PS, y_pred_PS, y_Dnu, y_pred_Dnu)
+
+	'''
+	Saves the model into its constant defined file
+	'''
+	def save(self):
+		self.model.save(BaselineNN.MODEL_FILEPATH)
+
+	'''
+	If called, loads the current saved model as the starting point
+	'''
+	def load(self):
+		self.model = load_model(BaselineNN.MODEL_FILEPATH)

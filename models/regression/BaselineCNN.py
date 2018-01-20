@@ -1,5 +1,5 @@
 from keras.models import Model
-from keras.layers import Dense, Activation, Dropout, Input, Conv1D, MaxPooling1D, Flatten
+from keras.layers import Dense, Activation, Dropout, Input, Conv1D, MaxPooling1D, Flatten, AveragePooling1D
 
 '''
 A simple baseline convolutional network that has two main steps:
@@ -18,24 +18,26 @@ class BaselineCNN(object):
 		input_spectra = Input(shape=(S_D, 1), name='input_spectra')
 
 		# Dense layers
-		conv_layer_1 = Conv1D(filters = 15, kernel_size=3, activation='relu')(input_spectra)
-		conv_layer_1 = MaxPooling1D(pool_size = 8)(conv_layer_1)
-		conv_layer_2 = Dropout(0.2)(Conv1D(filters = 32, kernel_size=3, activation = 'relu')(conv_layer_1))
-		conv_layer_2 = MaxPooling1D(pool_size = 8)(conv_layer_2)
-		conv_layer_3 = Dropout(0.2)(Conv1D(filters = 64, kernel_size=3, activation = 'relu')(conv_layer_2))
-		conv_layer_3 = MaxPooling1D(pool_size = 8)(conv_layer_3)
-		conv_layer_4 = Conv1D(filters = 50, kernel_size=3, activation = 'relu')(conv_layer_3)
-		conv_layer_4 = MaxPooling1D(pool_size = 2)(conv_layer_4)
+		conv_layer_1 = Conv1D(filters = 8, kernel_size=1, strides=2, activation='relu')(input_spectra)
+		conv_layer_1 = MaxPooling1D(pool_size = 2)(conv_layer_1)
+		conv_layer_2 = Dropout(0.2)(Conv1D(filters = 8, kernel_size=1, strides=2, activation = 'relu')(conv_layer_1))
+		conv_layer_2 = MaxPooling1D(pool_size = 2)(conv_layer_2)
+		conv_layer_3 = Dropout(0.2)(Conv1D(filters = 16, kernel_size=2, strides=2, activation = 'relu')(conv_layer_2))
+		conv_layer_3 = MaxPooling1D(pool_size = 2)(conv_layer_3)
+		conv_layer_4 = Dropout(0.2)(Conv1D(filters = 16, kernel_size=2, strides=2, activation = 'relu')(conv_layer_3))
+		conv_layer_4 = MaxPooling1D(pool_size = 8)(conv_layer_4)
+		# conv_layer_3 = Dropout(0.2)(Conv1D(filters = 64, kernel_size=2, strides=4, activation = 'relu')(conv_layer_2))
+		# conv_layer_3 = AveragePooling1D(pool_size = 4)(conv_layer_3)
 
 		embedding = Flatten(name='embedding')(conv_layer_4)
 
 		dense_layer_1 = Dense(64, activation='relu')(embedding)
 		dense_layer_2 = Dense(32, activation='relu')(dense_layer_1)
-		prediction_dnu = Dense(1, activation='relu', name='Dnu')(dense_layer_2)
+		prediction_dnu = Dense(1, activation='linear', name='Dnu')(dense_layer_2)
 
 		dense_layer_1 = Dense(64, activation='relu')(embedding)
 		dense_layer_2 = Dense(32, activation='relu')(dense_layer_1)
-		prediction_ps = Dense(1, activation='relu', name='DPi1')(dense_layer_2)
+		prediction_ps = Dense(1, activation='linear', name='DPi1')(dense_layer_2)
 
 		self.model = Model(inputs=[input_spectra], output=[prediction_ps, prediction_dnu])
 

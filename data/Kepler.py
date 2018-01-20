@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from astropy.table import Table
 from astropy.table import Column
 from astroNN.apogee import allstar
@@ -165,16 +167,9 @@ class KeplerPeriodSpacing(AstroData):
 				self._star_dict['Dnu'].append(kic_table['Dnu'][index_in_kepler])
 				self._star_dict['PS'].append(kic_table['DPi1'][index_in_kepler])
 				self._star_dict['RC'].append(self.is_red_clump(kic_table['DPi1'][index_in_kepler], kic_table['Dnu'][index_in_kepler]))
-				print(self.is_red_clump(kic_table['DPi1'][index_in_kepler], kic_table['Dnu'][index_in_kepler]))
-				print(kic_table['Dnu'][index_in_kepler])
-				print(kic_table['DPi1'][index_in_kepler])
 
 				# Gap delete doesn't return row vector, need to manually reshape
-				if not use_steps:
-					self._star_dict['spectra'].append(spectra_no_gap)
-				else:
-					# Need to reshape to steps
-					self._star_dict['spectra'].append(spectra_no_gap.reshape(spectra_no_gap.shape[0], 1))
+				self._star_dict['spectra'].append(spectra_no_gap)
 
 				# Close file handler
 				del spectra_data
@@ -209,6 +204,7 @@ class KeplerPeriodSpacing(AstroData):
 		max_number_of_stars - Maximum number of star data to return, by default returns all
 		use_steps - If True then returns spectra that is usable for convolutional networks (batch_size, steps, 1)
 		standardize - Standardize all values to be Gaussian centered at 0 with std. = 1
+		show_data_statistics - Print the statistics of the loaded stars file
 	Returns:
 		dict: { 
 			KIC     : [Int]
@@ -222,16 +218,17 @@ class KeplerPeriodSpacing(AstroData):
 			RC      : [Int]
 		}
 	'''
-	def get_data(self, version = 1, max_number_of_stars = float("inf"), use_steps = False, standardize = True):
+	def get_data(self, version = 1, max_number_of_stars = float("inf"), use_steps = False, standardize = True, show_data_statistics = True):
 
 		if not self._star_dict:
 			self.create_data(version, max_number_of_stars, use_steps)
 
-			# Print information about the data
-			print(("Kepler period spacing measurements with 𝚫v and APOGEE spectra\n" +
-				"-------------------------------------------------------------\n" +
-				"Stars: {}\n" +
-				"Projected size: {}mb").format(len(self._star_dict['KIC']), len(self._star_dict['KIC'])*9000*64*1.25e-7))
+			if show_data_statistics:
+				# Print information about the data
+				print(("Kepler period spacing measurements with 𝚫v and APOGEE spectra\n" +
+					"-------------------------------------------------------------\n" +
+					"Stars: {}\n" +
+					"Projected size: {}mb").format(len(self._star_dict['KIC']), len(self._star_dict['KIC'])*9000*64*1.25e-7))
 
 		if standardize:
 			# Star spectra seems tricky to standardize due to numerical issues, should look into this
@@ -243,6 +240,11 @@ class KeplerPeriodSpacing(AstroData):
 			self._star_dict['spectra'] = preprocessing.scale(self._star_dict['spectra'])
 			self._star_dict['logg']    = preprocessing.scale(np.array(self._star_dict['logg']))
 			self._star_dict['T_eff']   = preprocessing.scale(np.array(self._star_dict['T_eff']))
+
+		# Check if need to use steps
+		if use_steps:
+			self._star_dict['spectra'] = self._star_dict['spectra'].reshape((self._star_dict['spectra'].shape[0], self._star_dict['spectra'].shape[1], 1))
+
 		return self._star_dict
 
 

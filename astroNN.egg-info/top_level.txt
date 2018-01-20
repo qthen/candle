@@ -1,6 +1,0 @@
-astroNN
-astroNN/apogee
-astroNN/datasets
-astroNN/gaia
-astroNN/models
-astroNN/shared

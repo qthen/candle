@@ -42,7 +42,7 @@ spectra_data = pca.embed(data['spectra'])
 # Model training and fitting
 if (args.regression):
 	# Regression task
-	model = BaselineNN(S_D = components)
+	model = BaselineNNRegression(S_D = components)
 	model.compile(optimizer=optimizer)
 	history = model.fit(spectra_data, [data['PS'], data['Dnu']], validation_split=0.1, epochs = epochs, batch_size = batch_size)
 

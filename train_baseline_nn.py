@@ -1,71 +1,46 @@
+'''
+Training entry point for the baseline neural network, mainly used for evaluating embeddings on spectra
+'''
 from data.Kepler import KeplerPeriodSpacing
 from models.spectra_embeddings.PCA import SpectralEmbeddingPCA
 from models.regression.BaselineNN import BaselineNN
 from keras.optimizers import SGD, Adam
-import matplotlib.pyplot as plt
+import argparse
+import numpy as np
 
-# Constants to use to train the BaselineNN
-NUMBER_OF_STARS = 3100
-EMBEDDING_DIMENSION = 100
+# Argument line parsing first
+parser = argparse.ArgumentParser(description='Train baseline neural network')
+parser.add_argument('--epochs', dest='epochs', type=int, default=100, help='Epochs to train for')
+parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, help='Batch size to use')
+parser.add_argument('--optimizer', dest='optimizer', type=str, default="adam", help='Optimizer to use')
+parser.add_argument('--components', dest='components', type=int, default=100, help='Number of PCA components')
+parser.add_argument('--lr', dest='lr', type=float, default=0.01, help='Learning rate to use')
+args = parser.parse_args()
+epochs = args.epochs
+lr = args.lr
+batch_size = args.batch_size
+components = args.components
 
-# Optimizers
-adam_opt = Adam(0.001)
-sgd_opt = SGD(0.00001, momentum=0.9, decay=0.0, nesterov=True)
+optimizer = SGD(args.lr, momentum=0.5, decay=0.0, nesterov=True)
+if args.optimizer == 'adam':
+	optimizer = Adam(args.lr)
 
 # Get the Kepler data with DPi1, Dnu and APOGEE spectra
 kepler = KeplerPeriodSpacing()
-data = kepler.get_data(max_number_of_stars = NUMBER_OF_STARS)
-
-# Plotting the data of PS and large seperation - you can see a large cluster of 2 groups
-ps = data['DPi1']
-delta_v = data['Dnu']
-plt.scatter(delta_v, ps)
-plt.xlabel('Dnu')
-plt.ylabel('DPi1')
-plt.show()
+data = kepler.get_data(version = 2, standardize = False)
+N = len(data['KIC'])
 
 # First reduce dimension to 10
-pca = SpectralEmbeddingPCA(E_D = EMBEDDING_DIMENSION)
+pca = SpectralEmbeddingPCA(E_D = components)
 
 # Train on 90% and test on last 10%
-pca.fit(data['spectra'][0:int(0.9*NUMBER_OF_STARS)])
+pca.fit(data['spectra'][0:int(0.9*N)])
 spectra_data = pca.embed(data['spectra'])
 
 # Model training and fitting
-model = BaselineNN(S_D = EMBEDDING_DIMENSION)
-model.compile(optimizer=adam_opt)
-history = model.fit(spectra_data, [data['DPi1'], data['Dnu']], validation_split=0.1, epochs = 1000, batch_size = 32)
+model = BaselineNN(S_D = components)
+model.compile(optimizer=optimizer)
+history = model.fit(spectra_data, [data['PS'], data['Dnu']], validation_split=0.1, epochs = epochs, batch_size = batch_size)
 
-# Plot the training data
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.legend(['Training loss', 'Test loss'], loc='upper left')
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
-plt.show()
-
-# Plot the MAPE
-plt.plot(history.history['DPi1_mean_absolute_percentage_error'])
-plt.plot(history.history['Dnu_mean_absolute_percentage_error'])
-plt.plot(history.history['val_DPi1_mean_absolute_percentage_error'])
-plt.plot(history.history['val_Dnu_mean_absolute_percentage_error'])
-plt.legend(['PS Training MAPE', 'Δv Training MAPE', 'PS Validation MAPE', 'Δv Validation MAPE'], loc='upper left')
-plt.xlabel('Epoch')
-plt.ylabel('MAPE')
-plt.show()
-
-# model.compile(optimizer = sgd_opt)
-# model.fit(spectra_data, data['DPi1'], epochs=1000, validation_split=0.1)
-
-
-
-# # Plotting some random star spectra
-# spectra = data['spectra'][0]
-# plt.plot([i for i in range(0, len(spectra))], spectra)
-# plt.show()
-
-# pca = SpectralEmbeddingPCA(E_D = 2)
-# pca.fit(np.array(data['spectra'][0:3000]))
-# y = pca.embed(np.array(data['spectra'][3000:4000]))
-# plt.scatter(y[:,0], y[:,1])
-# plt.show()
+# Show model visualizations
+y_pred = model.judge(spectra_data[int(0.9*N):], [data['PS'][int(0.9*N):], data['Dnu'][int(0.9*N):]])

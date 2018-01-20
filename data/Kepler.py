@@ -1,4 +1,3 @@
-from data.AstroData import AstroData
 from astropy.table import Table
 from astropy.table import Column
 from astroNN.apogee import allstar
@@ -6,6 +5,8 @@ from astropy.io import fits
 from astroNN.datasets.xmatch import xmatch
 from astroNN.apogee import combined_spectra
 from astroNN.apogee.chips import gap_delete
+from data.AstroData import AstroData
+from sklearn import preprocessing
 import pickle
 import numpy as np
 import os.path
@@ -22,6 +23,7 @@ class KeplerPeriodSpacing(AstroData):
 	def __init__(self):
 		self._star_dict = None
 		self._PICKLE_DIR = "pickles/kepler/"
+
 
 	'''
 	Helper function for populating original KIC catalog of red giants and their asteroseismic parameters with RA and DEC
@@ -128,8 +130,18 @@ class KeplerPeriodSpacing(AstroData):
 
 		# Building spectra data for KIC from APOGEE overlaps
 		for i in range(0, len(idx_apogee)):
-			a_apogee_id = apogee_data[1].data['APOGEE_ID'][idx_apogee[i]]
-			a_location_id = apogee_data[1].data['LOCATION_ID'][idx_apogee[i]]
+			index_in_apogee = idx_apogee[i]
+			index_in_kepler = idx_kic[i]
+			
+			# Version 2 - Subject to the following constraints
+			# Flag checking, condition is the same as Hawkins et al. 2017, STARFLAG and ASPCAP bitwise OR is 0
+			# KIC checking, uncertainty in PS should be less than 10s
+			if version == 2 and not(apogee_data[1].data['STARFLAG'][index_in_apogee] == 0 and apogee_data[1].data['ASPCAPFLAG'][index_in_apogee] == 0 and kic_table['e_DPi1'][index_in_kepler] < 10):
+					continue
+
+			a_apogee_id = apogee_data[1].data['APOGEE_ID'][index_in_apogee]
+			a_location_id = apogee_data[1].data['LOCATION_ID'][index_in_apogee]
+
 			local_path_to_file_for_star = combined_spectra(dr=14, location=a_location_id, apogee=a_apogee_id)
 			if (local_path_to_file_for_star):
 				spectra_data = fits.open(local_path_to_file_for_star)
@@ -142,15 +154,15 @@ class KeplerPeriodSpacing(AstroData):
 				spectra_no_gap = spectra_no_gap.flatten()
 
 				# APOGEE data
-				self._star_dict['T_eff'].append(apogee_data[1].data['Teff'][idx_apogee[i]].copy())
-				self._star_dict['logg'].append(apogee_data[1].data['logg'][idx_apogee[i]].copy())
+				self._star_dict['T_eff'].append(apogee_data[1].data['Teff'][index_in_apogee].copy())
+				self._star_dict['logg'].append(apogee_data[1].data['logg'][index_in_apogee].copy())
 
 				# KIC data
-				self._star_dict['KIC'].append(kic_table['KIC'][idx_kic[i]])
-				self._star_dict['RA'].append(kic_table['RA'][idx_kic[i]])
-				self._star_dict['DEC'].append(kic_table['DE'][idx_kic[i]])
-				self._star_dict['Dnu'].append(kic_table['Dnu'][idx_kic[i]])
-				self._star_dict['PS'].append(kic_table['DPi1'][idx_kic[i]])
+				self._star_dict['KIC'].append(kic_table['KIC'][index_in_kepler])
+				self._star_dict['RA'].append(kic_table['RA'][index_in_kepler])
+				self._star_dict['DEC'].append(kic_table['DE'][index_in_kepler])
+				self._star_dict['Dnu'].append(kic_table['Dnu'][index_in_kepler])
+				self._star_dict['PS'].append(kic_table['DPi1'][index_in_kepler])
 
 				# Gap delete doesn't return row vector, need to manually reshape
 				if not use_steps:
@@ -190,6 +202,7 @@ class KeplerPeriodSpacing(AstroData):
 		version - The version of the data to use (1 = stars1.pickle, etc.)
 		max_number_of_stars - Maximum number of star data to return, by default returns all
 		use_steps - If True then returns spectra that is usable for convolutional networks (batch_size, steps, 1)
+		standardize - Standardize all values to be Gaussian centered at 0 with std. = 1
 	Returns:
 		dict: { 
 			KIC     : [Int]
@@ -202,7 +215,7 @@ class KeplerPeriodSpacing(AstroData):
 			logg    : [Float]
 		}
 	'''
-	def get_data(self, version = 1,max_number_of_stars = float("inf"), use_steps = False):
+	def get_data(self, version = 1, max_number_of_stars = float("inf"), use_steps = False, standardize = True):
 
 		if not self._star_dict:
 			self.create_data(version, max_number_of_stars, use_steps)
@@ -213,4 +226,16 @@ class KeplerPeriodSpacing(AstroData):
 				"Stars: {}\n" +
 				"Projected size: {}mb").format(len(self._star_dict['KIC']), len(self._star_dict['KIC'])*9000*64*1.25e-7))
 
+		if standardize:
+			# Star spectra seems tricky to standardize due to numerical issues, should look into this
+			self._star_dict['KIC']     = preprocessing.scale(self._star_dict['KIC'])
+			self._star_dict['RA']      = preprocessing.scale(np.array(self._star_dict['RA']))
+			self._star_dict['DEC']     = preprocessing.scale(np.array(self._star_dict['DEC']))
+			self._star_dict['Dnu']     = preprocessing.scale(np.array(self._star_dict['Dnu']))
+			self._star_dict['PS']      = preprocessing.scale(np.array(self._star_dict['PS']))
+			self._star_dict['spectra'] = preprocessing.scale(self._star_dict['spectra'])
+			self._star_dict['logg']    = preprocessing.scale(np.array(self._star_dict['logg']))
+			self._star_dict['T_eff']   = preprocessing.scale(np.array(self._star_dict['T_eff']))
 		return self._star_dict
+
+

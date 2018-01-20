@@ -1,5 +1,7 @@
-from keras.models import Model
+from keras.callbacks import EarlyStopping
 from keras.layers import Dense, Activation, Dropout, Input
+from keras.models import Model
+import services.ModelPerformanceVisualization as model_visualizer
 
 '''
 A baseline neural network that consists of separate fully connected layers to a given star spectra and 
@@ -8,7 +10,7 @@ does regression on asteroseismic parameters
 Star spectra for this model should be dimensionally reduced prior to prediction due to the size of a large 
 fully connected layer and low count of training data
 
-100 epoch result:
+100 epoch result
 loss                                    : 1611.0846
 DPi1_loss                               : 1610.5841
 Dnu_loss                                : 0.5005
@@ -43,7 +45,7 @@ class BaselineNN(object):
 		# Dense layers for Dnu - not shared for now
 		dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(input_spectra))
 		dense_layer_2 = Dropout(0.1)(Dense(64, activation='relu')(dense_layer_1))
-		prediction_dnu = Dense(1, activation='relu', name='Dnu')(dense_layer_2)
+		prediction_dnu = Dense(1, activation='linear', name='Dnu')(dense_layer_2)
 
 		self.model = Model(inputs=[input_spectra], outputs=[prediction_ps, prediction_dnu])
 
@@ -73,3 +75,31 @@ class BaselineNN(object):
 	'''
 	def fit(self, X, y, epochs = 10, batch_size = 32, validation_split = 0.1):
 		return self.model.fit(X, y, epochs=epochs, batch_size = batch_size, validation_split = validation_split, shuffle = True)
+
+
+	'''
+	Predicts on a given test data sample
+	Inputs:
+		X - The spectra data
+	Returns:
+		array of nparray, [0] => PS, [1] => Δv
+	'''
+	def predict(self, X):
+		return self.model.predict(X)
+
+	'''
+	Evaluates and judges itself then plots visualizations of how well it did on predictions on the given data and the target values
+	Input:
+		X - The spectra data
+		y - The target PS and Δv as a list
+	Returns:
+		Boolean - True on success
+	'''
+	def judge(self, X, y):
+		y_PS, y_Dnu = y
+		y_pred_PS, y_pred_Dnu = self.predict(X)
+		model_visualizer.plot_ps_vs_pred_ps(y_PS, y_pred_PS)
+		model_visualizer.plot_dnu_vs_pred_dnu(y_Dnu, y_pred_Dnu)
+
+
+

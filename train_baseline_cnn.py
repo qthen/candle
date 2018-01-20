@@ -27,6 +27,9 @@ model = BaselineCNN(S_D = data['spectra'].shape[1])
 model.compile(optimizer=sgd_opt)
 history = model.fit(data['spectra'], [data['DPi1'], data['Dnu']], validation_split=0.1, epochs = 100, batch_size = 32)
 
+# Plot results
+
+
 # # Plot the training data
 # plt.plot(history.history['loss'])
 # plt.plot(history.history['val_loss'])

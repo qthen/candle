@@ -27,5 +27,5 @@ class SpectralEmbeddingPCA(Embedding):
 	Overriding from the Embedding class
 	'''
 	def embed(self, X): 
-		return self.PCA.transform(X)		
+		return self.PCA.transform(X)
 		

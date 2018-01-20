@@ -3,7 +3,8 @@ Training entry point for the baseline neural network, mainly used for evaluating
 '''
 from data.Kepler import KeplerPeriodSpacing
 from models.spectra_embeddings.PCA import SpectralEmbeddingPCA
-from models.regression.BaselineNN import BaselineNN
+from models.regression.BaselineNN import BaselineNN as BaselineNNRegression
+from models.classification.BaselineNN import BaselineNN as BaselineNNBinaryClassification
 from keras.optimizers import SGD, Adam
 import argparse
 import numpy as np
@@ -15,6 +16,7 @@ parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, hel
 parser.add_argument('--optimizer', dest='optimizer', type=str, default="adam", help='Optimizer to use')
 parser.add_argument('--components', dest='components', type=int, default=100, help='Number of PCA components')
 parser.add_argument('--lr', dest='lr', type=float, default=0.01, help='Learning rate to use')
+parser.add_argument('--regression', dest='regression', type=bool, default=False, help="Regression task?")
 args = parser.parse_args()
 epochs = args.epochs
 lr = args.lr
@@ -38,9 +40,19 @@ pca.fit(data['spectra'][0:int(0.9*N)])
 spectra_data = pca.embed(data['spectra'])
 
 # Model training and fitting
-model = BaselineNN(S_D = components)
-model.compile(optimizer=optimizer)
-history = model.fit(spectra_data, [data['PS'], data['Dnu']], validation_split=0.1, epochs = epochs, batch_size = batch_size)
+if (args.regression):
+	# Regression task
+	model = BaselineNN(S_D = components)
+	model.compile(optimizer=optimizer)
+	history = model.fit(spectra_data, [data['PS'], data['Dnu']], validation_split=0.1, epochs = epochs, batch_size = batch_size)
 
-# Show model visualizations
-y_pred = model.judge(spectra_data[int(0.9*N):], [data['PS'][int(0.9*N):], data['Dnu'][int(0.9*N):]])
+	# Show model visualizations
+	y_pred = model.judge(spectra_data[int(0.9*N):], [data['PS'][int(0.9*N):], data['Dnu'][int(0.9*N):]])
+else:
+	# Classification task
+	model = BaselineNNBinaryClassification(S_D = components)
+	model.compile(optimizer=optimizer)
+	history = model.fit(spectra_data, data['RC'], validation_split=0.1, epochs = epochs, batch_size = batch_size)
+
+	# Show model visualizations
+	y_pred = model.judge(spectra_data[int(0.9*N):], [data['PS'][int(0.9*N):], data['Dnu'][int(0.9*N):]])

@@ -1,7 +1,7 @@
 from keras.callbacks import EarlyStopping
 from keras.layers import Dense, Activation, Dropout, Input
 from keras.models import Model
-import services.ModelPerformanceVisualization as model_visualizer
+import matplotlib.pyplot as plt
 
 '''
 A baseline neural network that consists of separate fully connected layers to a given star spectra and 
@@ -9,22 +9,6 @@ does regression on asteroseismic parameters, and is easily adaptable to regressi
 
 Star spectra for this model should be dimensionally reduced prior to prediction due to the size of a large 
 fully connected layer and low count of training data
-
-100 epoch result
-loss                                    : 1611.0846
-DPi1_loss                               : 1610.5841
-Dnu_loss                                : 0.5005
-DPi1_mean_absolute_error                : 28.6636
-DPi1_mean_absolute_percentage_error     : 17.2518
-Dnu_mean_absolute_error                 : 0.4684
-Dnu_mean_absolute_percentage_error      : 7.1293
-val_loss                                : 1818.0663
-val_DPi1_loss                           : 1817.6984
-val_Dnu_loss                            : 0.3680
-val_DPi1_mean_absolute_error            : 27.0088
-val_DPi1_mean_absolute_percentage_error : 14.0153
-val_Dnu_mean_absolute_error             : 0.3383
-val_Dnu_mean_absolute_percentage_error  : 5.6662
 '''
 
 class BaselineNN(object):
@@ -39,16 +23,11 @@ class BaselineNN(object):
 		input_spectra = Input(shape=(S_D,), name='input_spectra')
 
 		# Dense layers for PS - not shared for now
-		dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(input_spectra))
-		dense_layer_2 = Dropout(0.1)(Dense(64, activation='relu')(dense_layer_1))
-		prediction_ps = Dense(1, activation='relu', name='DPi1')(dense_layer_2)
+		dense_layer_1 = Dropout(0.1)(Dense(128, activation='elu')(input_spectra))
+		dense_layer_2 = Dropout(0.1)(Dense(64, activation='elu')(dense_layer_1))
+		prediction = Dense(1, activation='sigmoid', name='RC')(dense_layer_2)
 
-		# Dense layers for Dnu - not shared for now
-		dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(input_spectra))
-		dense_layer_2 = Dropout(0.1)(Dense(64, activation='relu')(dense_layer_1))
-		prediction_dnu = Dense(1, activation='linear', name='Dnu')(dense_layer_2)
-
-		self.model = Model(inputs=[input_spectra], outputs=[prediction_ps, prediction_dnu])
+		self.model = Model(inputs=[input_spectra], output=prediction)
 
 	'''
 	Compile the model given the optimizer, loss function, and the model architecture and metrics
@@ -59,7 +38,7 @@ class BaselineNN(object):
 	Returns:
 		None
 	'''
-	def compile(self, loss_fn='mse', optimizer = 'adam', metrics = ['mae', 'mape']):
+	def compile(self, loss_fn='binary_crossentropy', optimizer = 'adam', metrics = ['acc']):
 		self.model.compile(optimizer=optimizer, loss=loss_fn, metrics=metrics)
 
 
@@ -93,11 +72,32 @@ class BaselineNN(object):
 	Input:
 		X - The spectra data
 		y - The target PS and Δv as a list
-	Returns:
-		Boolean - True on success
 	'''
 	def judge(self, X, y):
 		y_PS, y_Dnu = y
-		y_pred_PS, y_pred_Dnu = self.predict(X)
-		model_visualizer.plot_ps_vs_pred_ps(y_PS, y_pred_PS)
-		model_visualizer.plot_dnu_vs_pred_dnu(y_Dnu, y_pred_Dnu)
+		y_rc = self.predict(X)
+		RC_COLOR = "#F03434"
+		RGB_COLOR = "#F89406"
+		y_rc_dnu = []
+		y_rgb_dnu = []
+		rcs = []
+		rgbs = []
+		# Get all predicted RC's
+		for i in range(0, len(y_rc)):
+			if y_rc[i] >= 0.5:
+				rcs.append(y_PS[i])
+				y_rc_dnu.append(y_Dnu[i])
+			else:
+				y_rgb_dnu.append(y_Dnu[i])
+				rgbs.append(y_PS[i])
+		rc_plot = plt.scatter(y_rc_dnu, rcs, c="#F03434", alpha = 0.6)
+		rgb_plot = plt.scatter(y_rgb_dnu, rgbs, c="#F89406", alpha = 0.6)
+		plt.plot([0, 20], [100, 175], linestyle='--', color='#013243')
+		plt.xlim(xmin=0, xmax=20)
+		plt.ylim(ymin=0, ymax=400)
+		plt.xlabel("Δv - large frequency separation")
+		plt.ylabel("Period spacing")
+		plt.title("Baseline neural network classification on red giants")
+		plt.legend((rc_plot,rgb_plot), ['RC stars', 'RGB stars'])
+		plt.show()
+

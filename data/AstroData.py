@@ -19,6 +19,8 @@ get_data: Return singleton of data
 Data may have many versions, read from the pickles/data_wanted README to figure out which one is desired
 
 Process of data curation typically requires dependencies of partial data from /table then pickling the completed dict into /pickles
+
+AstroData also provides the method, is_red_clump(ps, Dnu) which takes stellar parameters and returns a 0 or 1. This is based on the Vrad, 2016 paper
 '''
 class AstroData(object):
 
@@ -33,3 +35,14 @@ class AstroData(object):
 	'''
 	def create_data(self):
 		raise NotImplementedError("Abstract method must be overridden")
+
+	'''
+	Based on Vrad, 2016 paper on Period Spacings in Red Giants II, a line of best fit was drawn on a plot of red giants by Δv and PS and acts as the best ground truth for red clump classification
+	Inputs:
+		PS - [Float], the period spacing of a star
+		Dnu - [Float], the Δv of a star, large frequency separation
+	Returns:
+		1|0 - Float, 1 denotes red clump status
+	'''
+	def is_red_clump(self, PS, Dnu):
+		return 1.0 if PS >= ((float(75)/float(26))*Dnu + 100.0) else 0.0

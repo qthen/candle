@@ -109,6 +109,7 @@ class KeplerPeriodSpacing(AstroData):
 			'spectra' : [],
 			'T_eff'   : [],
 			'logg'    : [],
+			'RC'      : []
 		}
 
 		# First create table of Kepler stars with PS and Δv with their RA, DEC (creates table1.dat)
@@ -163,6 +164,10 @@ class KeplerPeriodSpacing(AstroData):
 				self._star_dict['DEC'].append(kic_table['DE'][index_in_kepler])
 				self._star_dict['Dnu'].append(kic_table['Dnu'][index_in_kepler])
 				self._star_dict['PS'].append(kic_table['DPi1'][index_in_kepler])
+				self._star_dict['RC'].append(self.is_red_clump(kic_table['DPi1'][index_in_kepler], kic_table['Dnu'][index_in_kepler]))
+				print(self.is_red_clump(kic_table['DPi1'][index_in_kepler], kic_table['Dnu'][index_in_kepler]))
+				print(kic_table['Dnu'][index_in_kepler])
+				print(kic_table['DPi1'][index_in_kepler])
 
 				# Gap delete doesn't return row vector, need to manually reshape
 				if not use_steps:
@@ -188,6 +193,7 @@ class KeplerPeriodSpacing(AstroData):
 		self._star_dict['spectra'] = np.array(self._star_dict['spectra'])
 		self._star_dict['logg']    = np.array(self._star_dict['logg'])
 		self._star_dict['T_eff']   = np.array(self._star_dict['T_eff'])
+		self._star_dict['RC']      = np.array(self._star_dict['RC'])
 
 		# Pickle for caching
 		pickle_out = open("{}stars{}.pickle".format(self._PICKLE_DIR, version), 'wb')
@@ -212,7 +218,8 @@ class KeplerPeriodSpacing(AstroData):
 			Dnu     : [Float]
 			PS      : [Float]
 			T_eff   : [Float]
-			logg    : [Float]
+			logg    : [Float],
+			RC      : [Int]
 		}
 	'''
 	def get_data(self, version = 1, max_number_of_stars = float("inf"), use_steps = False, standardize = True):

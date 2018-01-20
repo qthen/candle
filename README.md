@@ -5,7 +5,7 @@ candle is an in-progress overview of machine learning techniques to distinguish 
 
 As asteroseismic data is not as widely available as spectral data on stars and with the recent growing availability and size of APOGEE sky surveys and their resolution, it is of interest to see spectral applications to discerning red clump stars, which are standard candles, from their younger red giant branch stars. 
 
-For CSC494 research project under the supervison of Professor Bovy. 
+For CSC494 research project under the supervison of Professor Bovy - <a href="http://astro.utoronto.ca/~bovy/">Jo Bovy</a>
 
 ## Project description
 

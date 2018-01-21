@@ -74,7 +74,7 @@ class ConvolutionalAutoencoder(Embedding):
 		encoded = Flatten(name="encoded")(conv_layer_4)
 
 		# Decoding
-		layer_3 = Dense(1000, activation='relu')(encoded)
+		layer_3 = Dense(100, activation='relu')(encoded)
 		decoded = Dense(S_D, activation='relu')(layer_3)
 
 		self.model = Model(inputs=[input_spectra], output=decoded)

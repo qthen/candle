@@ -7,4 +7,4 @@ pickles/kepler/
 .ipynb_checkpoints/
 models/regression/BaselineNN.h5
 models/spectra_embeddings/__pycache__
-**.pyc
+vrad.ipynb

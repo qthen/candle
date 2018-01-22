@@ -20,7 +20,7 @@ epochs = args.epochs
 lr = args.lr
 batch_size = args.batch_size
 
-optimizer = SGD(args.lr, momentum=0.5, decay=0.0, nesterov=True)
+optimizer = SGD(args.lr, momentum=0.9, decay=0.0, nesterov=True)
 if args.optimizer == 'adam':
 	optimizer = Adam(args.lr)
 
@@ -30,7 +30,7 @@ data = kepler.get_data(version = 2, standardize = False, use_steps = True)
 N = len(data['KIC'])
 
 # Model training and fitting
-if (args.regression):
+if args.regression:
 	# Regression task
 	model = BaselineCNNRegression(S_D = data['spectra'].shape[1])
 	model.compile(optimizer=optimizer)

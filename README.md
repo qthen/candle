@@ -18,3 +18,10 @@ Based on a line of best fit with data from `Vrad, 2016` that is able to predict 
 <p style="text-align:center;">
 y = 75/26x + 100
 </p>
+
+## Most confused stars:
+
+http://simbad.u-strasbg.fr/simbad/sim-id?Ident=KIC11620695
+http://simbad.u-strasbg.fr/simbad/sim-id?Ident=KIC11605129
+
+Mis-classified as RC when they are RGB, yet RC have 100% accuracy, interesting

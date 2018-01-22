@@ -241,7 +241,7 @@ class KeplerPeriodSpacing(AstroData):
 			self._star_dict['logg']    = preprocessing.scale(np.array(self._star_dict['logg']))
 			self._star_dict['T_eff']   = preprocessing.scale(np.array(self._star_dict['T_eff']))
 
-		# Check if need to use steps
+		# Check if need to use steps - mainly for use for convolutional networks
 		if use_steps:
 			self._star_dict['spectra'] = self._star_dict['spectra'].reshape((self._star_dict['spectra'].shape[0], self._star_dict['spectra'].shape[1], 1))
 

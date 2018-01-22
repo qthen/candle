@@ -6,6 +6,6 @@ kepler = KeplerPeriodSpacing()
 data = kepler.get_data(version = 2, standardize = False, use_steps = True)
 N = len(data['KIC'])
 
-encoder = FullyConnectedAutoencoder(data['spectra'].shape[1], 50)
+encoder = FullyConnectedAutoencoder(data['spectra'].shape[1], 100)
 encoder_conv = ConvolutionalAutoencoder(data['spectra'].shape[1], 50)
 encoder_conv.fit(data['spectra'])

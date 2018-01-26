@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from astropy.table import Table
 from astropy.table import Column
 from astroNN.apogee import allstar

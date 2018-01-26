@@ -10,3 +10,6 @@ models/spectra_embeddings/__pycache__
 vrad.ipynb
 \train*
 *.pyc
+train/
+test.py
+*.h5

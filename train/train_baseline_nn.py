@@ -57,7 +57,6 @@ if args.regression:
 		# Show model visualizations
 		y_pred = model.judge(spectra_data[int(0.9*N):], [data['PS'][int(0.9*N):], data['Dnu'][int(0.9*N):], data['T_eff'][int(0.9*N):], data['logg'][int(0.9*N):]])
 		model.save()
-
 else:
 	# Classification task
 	model = BaselineNNBinaryClassification(S_D = components)

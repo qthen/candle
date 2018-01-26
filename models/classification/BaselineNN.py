@@ -22,6 +22,7 @@ class BaselineNN(object):
 	'''
 	def __init__(self, S_D = 10):
 		self.S_D = S_D
+		
 		# Create the model
 		input_spectra = Input(shape=(S_D,), name='input_spectra')
 

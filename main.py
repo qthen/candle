@@ -14,7 +14,7 @@ General file for presenting findings and starting the model and data from scratc
 # Generate each version of the Kepler data
 # Get the Kepler data with DPi1, Dnu and APOGEE spectra
 kepler = KeplerPeriodSpacing()
-data_kepler_1 = kepler.get_data(version = 1, standardize = False)
+# data_kepler_1 = kepler.get_data(version = 1, standardize = False)
 data_kepler_2 = kepler.get_data(version = 2, standardize = False)
 
 # Plot some PS as a function of Δv from version 2
@@ -26,6 +26,13 @@ plt.title("Period spacing in red giants")
 plt.xlabel("Δv - Large frequency separation")
 plt.ylabel("Period Spacing")
 plt.show()
+
+# Plot the effective temperature as a function of log(g)
+plt.scatter(data_kepler_2['T_eff'], data_kepler_2['logg'], color="#F89406", alpha = 0.5)
+plt.title("Effective temperature and log(g) distribution")
+plt.xlabel("T_eff")
+plt.ylabel("log(g)")
+
 
 # Plot reconstruction of spectra from PCA, this is actualy a surprising find, but it is not obvious from the graph. All spectra are fairly simiilar and PCA captures the overall structure, but the problem is that visually, there doesn't seem to be a huge improvement when plotting 1 component PCA (ridiculous) vs. 5 components, but there are idosyncranics in the data
 # The large difference is clearly shown, however, when showing the distance between the reconstructed spectra 
@@ -73,20 +80,20 @@ plt.title('Euclidean distance from reconstructed spectra to original spectra fro
 plt.tight_layout()
 plt.show()
 
-# Plot the decreasing distance as a function of n components PCA
-x = []
-y = []
-for i in range(1, 100):
-	pca = SpectralEmbeddingPCA(E_D = i)
-	pca.fit(data_kepler_2['spectra'][0:int(0.9*N)])
-	reduced_spectra = pca.embed(np.array([random_spectra_from_validation]))
-	reconstructed_spectra = pca.PCA.inverse_transform(reduced_spectra)[0]
-	x.append(i+1)
-	y.append(np.linalg.norm(random_spectra_from_validation - reconstructed_spectra))
+# # Plot the decreasing distance as a function of n components PCA
+# x = []
+# y = []
+# for i in range(1, 100):
+# 	pca = SpectralEmbeddingPCA(E_D = i)
+# 	pca.fit(data_kepler_2['spectra'][0:int(0.9*N)])
+# 	reduced_spectra = pca.embed(np.array([random_spectra_from_validation]))
+# 	reconstructed_spectra = pca.PCA.inverse_transform(reduced_spectra)[0]
+# 	x.append(i+1)
+# 	y.append(np.linalg.norm(random_spectra_from_validation - reconstructed_spectra))
 
-plt.plot(x, y)
-plt.tight_layout()
-plt.xlabel('Number of PCA components')
-plt.ylabel('Euclidean distance')
-plt.title("Reconstruc")
-plt.show()
+# plt.plot(x, y)
+# plt.tight_layout()
+# plt.xlabel('Number of PCA components')
+# plt.ylabel('Euclidean distance')
+# plt.title("Reconstruc")
+# plt.show()

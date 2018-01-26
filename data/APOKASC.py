@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+
 from astropy.table import Table
 from astropy.table import Column
 from astroNN.apogee import allstar
@@ -14,94 +13,33 @@ import numpy as np
 import os.path
 
 '''
-AstroData child for generating and handling data for Kepler stars observed with PS and Δv
-Retrieves data from `Vrad 2016` table and xmatch's for spectra
+Data from APOKASC catalog of Kepler red giants, child of AstroData
 '''
-class KeplerPeriodSpacing(AstroData):
+class APOKASC(AstroData):
 
 	'''
 	Constructor for the class, initializing caching variables and the singleton _star_dict
 	'''
 	def __init__(self):
 		self._star_dict = None
-		self._PICKLE_DIR = "pickles/kepler/"
-
-
-	'''
-	Helper function for populating original KIC catalog of red giants and their asteroseismic parameters with RA and DEC
-	RA and DEC is populated from "tables/KIC_A87/data_0.csv"
-	Newly populated table with RA, DEC is written to "tables/KIC_A87/table1.dat" and explained in README
-
-	This is because the original table: Period spacings in red giants. II. Automated measurement. doesn't come with RA and DEC columns
-	so I need to match their KIC with the Kepler Catalog that contains RA and DEC
-
-	Returns:
-		Boolean - True on success of writing the new table, false or throws otherwise
-	'''
-	def _populate_kepler_with_rc_dec(self):
-		# Creating the KIC_A87/table1.dat file which contains all the KIC stars with their RA and DEC
-		# If this already exists, we can load it from the tables/ file and proceed immediately to get the APOGEE spectra
-		if not os.path.exists('tables//KIC_A87/table1.dat'):
-
-			# This gets me the PS and astroseismic parameters from the KIC, but not the RA or DE
-			data_ps = Table.read("tables/A87/table2.dat", format="ascii")
-
-			# This gets me the RA and DE of the stars above into a dict
-			data_ra_de = {}
-			with open("tables/KIC_A87/data_0.csv") as fp:
-				skip = False
-				for line in fp:
-					if not skip:
-						skip = True
-						continue
-					kic, ra, de = line.split(",")[1:4]
-					data_ra_de[int(kic)] = (float(ra), float(de))
-
-			# Merge the two tables together with new columns: RA and DE inside data_ps
-			data_ps_array = data_ps.as_array()
-			ra_arr = []
-			de_arr = []
-			for i in range(0, len(data_ps_array)):
-				ra_arr.append(data_ra_de[int(data_ps_array[i][0])][0])
-				de_arr.append(data_ra_de[int(data_ps_array[i][0])][1])
-			ra_column = Column(name='RA', data=ra_arr)
-			de_column = Column(name='DE', data=de_arr)
-			data_ps.add_columns((ra_column, de_column))
-
-			# Renaming for help
-			data_ps.rename_column('col1', 'KIC')
-			data_ps.rename_column('col2', 'Dnu')
-			data_ps.rename_column('col3', 'DPi1')
-			data_ps.rename_column('col4', 'e_DPi1')
-			data_ps.rename_column('col5', 'q')
-			data_ps.rename_column('col6', 'M')
-			data_ps.rename_column('col7', 'e_M')
-			data_ps.rename_column('col8', 'Alias')
-			data_ps.rename_column('col9', 'Measure')
-			data_ps.rename_column('col10', 'Status')
-
-			data_ps.write('../tables/KIC_A87/table1.dat' , format='ascii')
-		return True
-
+		self._PICKLE_DIR = "pickles/APOKASC/"
 
 	'''
-	Overriding from AstroData, creates table KIC_A87/table1.dat that has KIC stars with RA, DEC
-	Then matches with APOGEE data and pickles into pickles/kepler/stars1.pickle
+	Overriding from AstroData, creates the pickle stars in pickles/APOKASC
 	Populates singleton, self._star_dict
 	Inputs:
 		version - The version of the data to use (1 = stars1.pickle, etc.)
-		max_number_of_stars - Maximum number of star data to return, by default returns all
-		use_steps - If True then returns spectra that is usable for convolutional networks (batch_size, steps, 1)
 	Returns:
 		Boolean - True on success, false or throws otherwise
 	'''
-	def create_data(self, version = 1, max_number_of_stars = float("inf"), use_steps = False):
+	def create_data(self, version = 1):
 
 		if os.path.exists('{}stars{}.pickle'.format(self._PICKLE_DIR, version)):
 			pickle_out = open("{}stars{}.pickle".format(self._PICKLE_DIR, version), 'rb')
 			self._star_dict = pickle.load(pickle_out)
 			return True
 
+		# Create the data
 		self._star_dict = {
 			'KIC'     : [],
 			'RA'      : [],
@@ -112,7 +50,6 @@ class KeplerPeriodSpacing(AstroData):
 			'T_eff'   : [],
 			'logg'    : [],
 			'RC'      : [],
-			'status'  : []
 		}
 
 		# First create table of Kepler stars with PS and Δv with their RA, DEC (creates table1.dat)
@@ -167,7 +104,6 @@ class KeplerPeriodSpacing(AstroData):
 				self._star_dict['DEC'].append(kic_table['DE'][index_in_kepler])
 				self._star_dict['Dnu'].append(kic_table['Dnu'][index_in_kepler])
 				self._star_dict['PS'].append(kic_table['DPi1'][index_in_kepler])
-				self._star_dict['status'].append(kic_table['Status'][index_in_kepler])
 				self._star_dict['RC'].append(self.is_red_clump(kic_table['DPi1'][index_in_kepler], kic_table['Dnu'][index_in_kepler]))
 
 				# Gap delete doesn't return row vector, need to manually reshape
@@ -191,7 +127,6 @@ class KeplerPeriodSpacing(AstroData):
 		self._star_dict['logg']    = np.array(self._star_dict['logg'])
 		self._star_dict['T_eff']   = np.array(self._star_dict['T_eff'])
 		self._star_dict['RC']      = np.array(self._star_dict['RC'])
-		self._star_dict['status']  = np.array(self._star_dict['status'])
 
 		# Pickle for caching
 		pickle_out = open("{}stars{}.pickle".format(self._PICKLE_DIR, version), 'wb')

@@ -13,7 +13,7 @@ Pickles for KIC data from `Vrad 2016` and their related spectra. This includes t
 		logg    : [Float]
 	}
 
-Formed by populating stars from `Seismic global parameters of 6111 KIC` with their RA and DEC, then xmatch them with APOGEE(dr=14) spectra, then deleting the pre-defined gaps from DR=14
+Formed by populating stars from `Seismic global parameters of 6111 KIC` with their RA and DEC, then xmatch them with APOGEE(dr=14) spectra, then deleting the pre-defined gaps from DR=14. 
 
 ## stars1.pickle
 Contains all stars that can be xmatch from `Vrad 2016` with APOGEE(dr=14)

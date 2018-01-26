@@ -1,5 +1,6 @@
 # A collection of functions to visualize a model's performance
 import matplotlib.pyplot as plt
+import numpy as np
 
 '''
 Plots the predicted PS with the truth PS
@@ -32,6 +33,33 @@ def plot_dnu_vs_pred_dnu(y_Dnu, y_pred_Dnu):
 	plt.xlim(xmin =0, xmax=20)
 	plt.ylim(ymin =0, ymax=20)
 	plt.show()
+
+'''
+Plots classification of stars with PS as a function of Dnu
+Input:
+	Dnu - Array of Dnu for the stars (x-axis)
+	PS - Array of PS of the stars (y-axis)
+	classifications - Classifications as an array
+	class_labels - Array of labels
+	title - Title of the classification graph
+'''
+def plot_classification(Dnu, PS, classifications, class_labels, title = "Classification of Kepler giants"):
+		K = len(class_labels) # Number of different classes, classifications should have K distinct integers
+		y_classes = [[] for i in range(0, K)]
+		for i in range(0, len(classifications)):
+			y_classes[classifications[i]].append([Dnu[i], PS[i]])
+		ax = plt.subplot(111)
+		categories = []
+		for k in range(0, K):
+			data = np.array(y_classes[k])
+			categories.append(plt.scatter(data[:,0], data[:,1],  alpha=0.5))
+		plt.xlim(xmin=0, xmax=20)
+		plt.ylim(ymin=0, ymax=400)
+		plt.xlabel("Δv - large frequency separation")
+		plt.ylabel("Period spacing")
+		plt.title(title)
+		plt.legend(categories, class_labels)
+		plt.show()
 
 '''
 Plots the given stellar predictions on subplots

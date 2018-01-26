@@ -25,3 +25,8 @@ http://simbad.u-strasbg.fr/simbad/sim-id?Ident=KIC11620695
 http://simbad.u-strasbg.fr/simbad/sim-id?Ident=KIC11605129
 
 Mis-classified as RC when they are RGB, yet RC have 100% accuracy, interesting
+
+## Ideas
+Since it is hypothesized that T_eff and log(g) have different distirubtions in rc and rgb, maybe predict the classification as a function of the predicted asteroseismic features?
+
+I have a prediction that embedding layers work poorly for CNN to predict asteroseismic features

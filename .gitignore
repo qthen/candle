@@ -8,3 +8,5 @@ pickles/kepler/
 models/regression/BaselineNN.h5
 models/spectra_embeddings/__pycache__
 vrad.ipynb
+\train*
+*.pyc

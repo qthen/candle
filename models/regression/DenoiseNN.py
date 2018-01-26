@@ -25,37 +25,39 @@ class DenoiseNN(object):
 
 		# Create the model
 		input_spectra = Input(shape=(S_D,), name='input_spectra')
-		corrupted_input = Dropout(0.2)(input_spectra)
+		d_1 = Dropout(0.4)(Dense(1000, activation='relu')(input_spectra))
+		d_2 = Dense(256, activation='relu')(d_1)
 
 		if shared:
 			# Shared dense layers
-			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(corrupted_input))
+			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(d_2))
 			dense_layer_2 = Dropout(0.1)(Dense(64, activation='relu')(dense_layer_1))
 			prediction = Dense(2, activation='linear', name='prediction_vector')(dense_layer_2)
 			self.model = Model(inputs=[input_spectra], output=prediction)
 
 		else:
 			# Dense layers for PS
-			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(corrupted_input))
+			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(d_2))
 			dense_layer_2 = Dropout(0.1)(Dense(64, activation='relu')(dense_layer_1))
 			prediction_ps = Dense(1, activation='linear', name='DPi1')(dense_layer_2)
 
 			# Dense layers for Dnu
-			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(corrupted_input))
+			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(d_2))
 			dense_layer_2 = Dropout(0.1)(Dense(64, activation='relu')(dense_layer_1))
 			prediction_dnu = Dense(1, activation='linear', name='Dnu')(dense_layer_2)
 
 			# Dense layers for T_eff
-			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(corrupted_input))
+			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(d_2))
 			dense_layer_2 = Dropout(0.1)(Dense(64, activation='relu')(dense_layer_1))
 			prediction_teff = Dense(1, activation='linear', name='T_eff')(dense_layer_2)
 
 			# Dense layers for logg
-			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(corrupted_input))
+			dense_layer_1 = Dropout(0.1)(Dense(128, activation='relu')(d_2))
 			dense_layer_2 = Dropout(0.1)(Dense(64, activation='relu')(dense_layer_1))
 			prediction_logg = Dense(1, activation='linear', name='logg')(dense_layer_2)
 
 			self.model = Model(inputs=[input_spectra], outputs=[prediction_ps, prediction_dnu, prediction_teff, prediction_logg])
+		self.model.summary()
 
 	'''
 	Compile the model given the optimizer, loss function, and the model architecture and metrics

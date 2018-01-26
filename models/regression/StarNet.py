@@ -17,29 +17,20 @@ class BaselineCNN(object):
 		# Create the model
 		input_spectra = Input(shape=(S_D, 1), name='input_spectra')
 
-		# Dense layers
-		conv_layer_1 = Conv1D(filters = 4, kernel_size=2, strides=1, activation='elu', kernel_initializer='he_normal')(input_spectra)
-		conv_layer_2 = Conv1D(filters = 8, kernel_size=2, strides=1, activation = 'elu', kernel_initializer='he_normal')(conv_layer_1)
-		conv_layer_3 = Dropout(0.1)(Conv1D(filters = 8, kernel_size=2, strides=1, activation = 'elu', kernel_initializer='he_normal')(conv_layer_2))
-		conv_layer_3 = MaxPooling1D(pool_size = 2)(conv_layer_3)
-		conv_layer_4 = Dropout(0.1)(Conv1D(filters = 8, kernel_size=2, strides=2, activation = 'elu', kernel_initializer='he_normal')(conv_layer_3))
-		conv_layer_4 = MaxPooling1D(pool_size = 2)(conv_layer_4)
-		conv_layer_5 = Dropout(0.1)(Conv1D(filters = 8, kernel_size=4, strides=2, activation = 'elu', kernel_initializer='he_normal')(conv_layer_4))
-		conv_layer_5 = MaxPooling1D(pool_size = 2)(conv_layer_5)
-		conv_layer_6 = Dropout(0.1)(Conv1D(filters = 16, kernel_size=4, strides=2, activation = 'elu', kernel_initializer='he_normal')(conv_layer_5))
-		conv_layer_6 = MaxPooling1D(pool_size = 2)(conv_layer_6)
-		conv_layer_7 = Dropout(0.1)(Conv1D(filters = 16, kernel_size=4, strides=2, activation = 'elu', kernel_initializer='he_normal')(conv_layer_6))
-		conv_layer_7 = MaxPooling1D(pool_size = 2)(conv_layer_7)
+		# Convolutional Layers
+		conv_layer_1 = Conv1D(kernel_initializer='he_normal', activation='relu', padding="same", filters=4, kernel_size=8)(input_spectra)
+		conv_layer_2 = Conv1D(kernel_initializer='he_normal', activation='relu', padding="same", filters=16, kernel_size=8)(conv_layer_1)
+		conv_layer_2 = MaxPooling1D(pool_size = 4)(conv_layer_2)
 
-		embedding = Flatten(name='embedding')(conv_layer_7)
+		embedding = Flatten(name='embedding')(conv_layer_2)
 
 		dense_layer_1 = Dense(256, activation='relu')(embedding)
 		dense_layer_2 = Dense(128, activation='relu')(dense_layer_1)
-		ps = Dense(1, activation='linear', name='ps')(dense_layer_2)
+		ps = Dense(1, activation='linear', name='PS')(dense_layer_2)
 
 		dense_layer_1 = Dense(256, activation='relu')(embedding)
 		dense_layer_2 = Dense(128, activation='relu')(dense_layer_1)
-		dnu = Dense(1, activation='linear', name='dnu')(dense_layer_2)
+		dnu = Dense(1, activation='linear', name='Dnu')(dense_layer_2)
 
 		self.model = Model(inputs=[input_spectra], outputs=[ps, dnu])
 

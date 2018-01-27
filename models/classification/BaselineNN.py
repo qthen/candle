@@ -1,6 +1,7 @@
 from keras.callbacks import EarlyStopping
 from keras.layers import Dense, Activation, Dropout, Input
 from keras.models import Model, load_model
+from services.ModelPerformanceVisualization import plot_classification
 import matplotlib.pyplot as plt
 
 '''
@@ -60,6 +61,17 @@ class BaselineNN(object):
 	def fit(self, X, y, epochs = 10, batch_size = 32, validation_split = 0.1):
 		return self.model.fit(X, y, epochs=epochs, batch_size = batch_size, validation_split = validation_split, shuffle = True)
 
+	'''
+	Scores the model on the given spectra and labels
+	Inputs:
+		X - Stellar spectra
+		y - Labels 1|0
+	'''
+	def score(self, X, y):
+		y_pred = self.predict(X)
+		y_pred = [1.0 if prob>= 0.5 else 0.0 for prob in y_pred]
+		acc = float(sum([1 if y_pred[i] == y[i] else 0 for i in range(0, len(y))]))/float(len(y))
+		print("Baseline neural network binary classification MAE: {}".format(acc))
 
 	'''
 	Predicts on a given test data sample
@@ -78,40 +90,41 @@ class BaselineNN(object):
 		y - The target PS and Δv as a list and ground truth
 	'''
 	def judge(self, X, y):
-		y_PS, y_Dnu, y_RC = y
-		spectra, kic = X
-		y_rc = self.predict(spectra)
-		RC_COLOR = "#F03434"
-		RGB_COLOR = "#F89406"
-		y_rc_dnu = []
-		y_rgb_dnu = []
-		rcs = []
-		rgbs = []
-		# Get all predicted RC's
-		for i in range(0, len(y_rc)):
-			if y_rc[i] >= 0.5:
-				rcs.append(y_PS[i])
-				y_rc_dnu.append(y_Dnu[i])
-			else:
-				y_rgb_dnu.append(y_Dnu[i])
-				rgbs.append(y_PS[i])
-		ax = plt.subplot(111)
-		rc_plot = plt.scatter(y_rc_dnu, rcs, c="#F03434", alpha = 0.6)
-		rgb_plot = plt.scatter(y_rgb_dnu, rgbs, c="#F89406", alpha = 0.6)
-		plt.plot([0, 20], [100, 175], linestyle='--', color='#013243')
-		plt.xlim(xmin=0, xmax=20)
-		plt.ylim(ymin=0, ymax=400)
-		plt.xlabel("Δv - large frequency separation")
-		plt.ylabel("Period spacing")
-		plt.title("Baseline NN classification on red giants with {} components".format(self.S_D))
-		plt.legend((rc_plot,rgb_plot), ['RC stars', 'RGB stars'])
+		plot_classification(y[1], y[0], [1 if i >= 0.5 else 0 for i in self.predict(X)], class_labels=['Red giant branch', 'Red clumps'], title="Baseline Neural Network classification")
+		# y_PS, y_Dnu, y_RC = y
+		# spectra, kic = X
+		# y_rc = self.predict(spectra)
+		# RC_COLOR = "#F03434"
+		# RGB_COLOR = "#F89406"
+		# y_rc_dnu = []
+		# y_rgb_dnu = []
+		# rcs = []
+		# rgbs = []
+		# # Get all predicted RC's
+		# for i in range(0, len(y_rc)):
+		# 	if y_rc[i] >= 0.5:
+		# 		rcs.append(y_PS[i])
+		# 		y_rc_dnu.append(y_Dnu[i])
+		# 	else:
+		# 		y_rgb_dnu.append(y_Dnu[i])
+		# 		rgbs.append(y_PS[i])
+		# ax = plt.subplot(111)
+		# rc_plot = plt.scatter(y_rc_dnu, rcs, c="#F03434", alpha = 0.6)
+		# rgb_plot = plt.scatter(y_rgb_dnu, rgbs, c="#F89406", alpha = 0.6)
+		# plt.plot([0, 20], [100, 175], linestyle='--', color='#013243')
+		# plt.xlim(xmin=0, xmax=20)
+		# plt.ylim(ymin=0, ymax=400)
+		# plt.xlabel("Δv - large frequency separation")
+		# plt.ylabel("Period spacing")
+		# plt.title("Baseline NN classification on red giants with {} components".format(self.S_D))
+		# plt.legend((rc_plot,rgb_plot), ['RC stars', 'RGB stars'])
 
-		# Annotate misclassified
-		for i in range(0, len(kic)):
-			pred = 1 if y_rc[i] >= 0.5 else 0
-			if y_RC[i] != pred:
-				plt.annotate("{}".format(kic[i]), (y_Dnu[i], y_PS[i]))
-		plt.show()
+		# # Annotate misclassified
+		# for i in range(0, len(kic)):
+		# 	pred = 1 if y_rc[i] >= 0.5 else 0
+		# 	if y_RC[i] != pred:
+		# 		plt.annotate("{}".format(kic[i]), (y_Dnu[i], y_PS[i]))
+		# plt.show()
 
 	'''
 	Saves the model into its constant defined file

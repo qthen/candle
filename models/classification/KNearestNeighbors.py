@@ -1,21 +1,21 @@
 from models.Model import Model
-from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 from services.ModelPerformanceVisualization import plot_classification
 import numpy as np
 
-class GaussianNaiveBayes(Model):
+class KNearestNeighbors(Model):
 
 	'''
 	Init a simple Gaussian Naive Bayes model
 	'''
 	def __init__(self):
-		self.model = GaussianNB()
+		self.model = KNeighborsClassifier()
 
 
 	'''
 	Compiles the model
 	'''
-	def compile(self, max_iterations = 100):
+	def compile(self):
 		pass
 
 	'''
@@ -26,7 +26,7 @@ class GaussianNaiveBayes(Model):
 		TypeError - If model is fit before it has been compiled
 	'''
 	def fit(self, X, y):
-		return self.model.fit(X, y)
+		self.model.fit(X, y)
 
 	'''
 	Predicts on X and returns the class labels
@@ -46,7 +46,7 @@ class GaussianNaiveBayes(Model):
 	'''
 	def score(self, X, y):
 		mean_acc = self.model.score(X, y)
-		print("Gaussian Naive Bayes binary classification MAE: {}".format(mean_acc))
+		print("K-Nearest Neighbors binary classification MAE: {}".format(mean_acc))
 
 	'''
 	Evaluates and judges itself then plots visualizations of how well it did on predictions on the given data and the target values
@@ -55,6 +55,6 @@ class GaussianNaiveBayes(Model):
 		y - The target PS and Δv as a list and ground truth
 	'''
 	def judge(self, X, y):
-		plot_classification(y[1], y[0], [int(i) for i in self.predict(X)], class_labels=['Red giant branch', 'Red clumps'], title="Gaussian Naive Bayes classification")
+		plot_classification(y[1], y[0], [int(i) for i in self.predict(X)], class_labels=['Red giant branch', 'Red clumps'], title="K-Nearest Neighbors classification")
 
 

@@ -48,12 +48,25 @@ class LogisticRegression(Model):
 			raise TypeError("Model not compiled yet")
 
 	'''
+	Scores the model given the stellar spectra and labels and prints it out
+	Input:
+		X - Stellar spectra
+		y - Labels: 1|0
+	Throws:
+		TypeError - Model not compiled yet
+	'''
+	def score(self, X, y):
+		if self.model:
+			mean_acc = self.model.score(X, y)
+			print("Logistic Regression binary classification MAE: {}".format(mean_acc))
+		else:
+			raise TypeError("Model not compiled yet")
+
+	'''
 	Evaluates and judges itself then plots visualizations of how well it did on predictions on the given data and the target values
 	Input:
 		X - The spectra from Kepler
 		y - The target PS and Δv as a list and ground truth
 	'''
 	def judge(self, X, y):
-		plot_classification(y[1], y[0], [int(i) for i in self.predict(X)], class_labels=['Red giant branch', 'Red clumps'])
-
-
+		plot_classification(y[1], y[0], [int(i) for i in self.predict(X)], class_labels=['Red giant branch', 'Red clumps'], title="Logistic Regression  classification")

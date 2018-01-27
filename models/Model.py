@@ -30,3 +30,12 @@ class Model(object):
 	'''
 	def predict(self, X, y):
 		raise NotImplementedError("Abstract method in base class of Model should be overriden")
+
+	'''
+	Score the results of the model on some validation set
+	Input:
+		X - Data, any format
+		y - Targets, any format
+	'''
+	def score(self, X, y):
+		raise NotImplementedError("Abstract method in base class of Model should be overriden")

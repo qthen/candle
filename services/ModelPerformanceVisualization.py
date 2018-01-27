@@ -44,22 +44,23 @@ Input:
 	title - Title of the classification graph
 '''
 def plot_classification(Dnu, PS, classifications, class_labels, title = "Classification of Kepler giants"):
-		K = len(class_labels) # Number of different classes, classifications should have K distinct integers
-		y_classes = [[] for i in range(0, K)]
-		for i in range(0, len(classifications)):
-			y_classes[classifications[i]].append([Dnu[i], PS[i]])
-		ax = plt.subplot(111)
-		categories = []
-		for k in range(0, K):
-			data = np.array(y_classes[k])
-			categories.append(plt.scatter(data[:,0], data[:,1],  alpha=0.5))
-		plt.xlim(xmin=0, xmax=20)
-		plt.ylim(ymin=0, ymax=400)
-		plt.xlabel("Δv - large frequency separation")
-		plt.ylabel("Period spacing")
-		plt.title(title)
-		plt.legend(categories, class_labels)
-		plt.show()
+	K = len(class_labels) # Number of different classes, classifications should have K distinct integers
+	y_classes = [[] for i in range(0, K)]
+	for i in range(0, len(classifications)):
+		y_classes[classifications[i]].append([Dnu[i], PS[i]])
+	ax = plt.subplot(111)
+	categories = []
+	for k in range(0, K):
+		data = np.array(y_classes[k])
+		categories.append(plt.scatter(data[:,0], data[:,1],  alpha=0.5))
+	plt.xlim(xmin=0, xmax=20)
+	plt.ylim(ymin=0, ymax=400)
+	plt.xlabel("Δv - large frequency separation")
+	plt.ylabel("Period spacing")
+	
+	plt.legend(categories, class_labels)
+	plt.title(title)
+	plt.show()
 
 '''
 Plots the given stellar predictions on subplots

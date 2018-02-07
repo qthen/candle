@@ -19,15 +19,10 @@ class FullyConnectedAutoencoder(Embedding):
 
 		# Construct the auto encoder
 		input_spectra = Input(shape=(S_D,), name='input_spectra')
-		corrupted_input = Dropout(0.5)(input_spectra)
-		layer_1 = Dense(1000, activation='relu')(corrupted_input)
-		layer_2 = Dense(500, activation='relu')(layer_1)
-		encoded = Dense(E_D, activation='relu')(layer_2)
+		encoded = Dense(100, activation='relu')(input_spectra)
 
 		# Decoding
-		layer_3 = Dense(500, activation='relu')(encoded)
-		layer_4 = Dense(1000, activation='relu')(layer_3)
-		decoded = Dense(S_D, activation='relu')(layer_4)
+		decoded = Dense(S_D, activation='linear')(encoded)
 
 		self.model = Model(inputs=[input_spectra], output=decoded)
 		self.encoding_model = Model(inputs=[input_spectra], output=encoded)
@@ -40,9 +35,9 @@ class FullyConnectedAutoencoder(Embedding):
 		X - The input spectra
 	'''
 	def fit(self, X):
-		optimizer = SGD(0.001, momentum=0.9, decay=0.0, nesterov=True)
-		self.model.compile(optimizer=optimizer, loss='mse')
-		self.model.fit(X, X, epochs = 50, batch_size=32, shuffle=True, validation_split=0.1)
+		optimizer = SGD(1, momentum=0.9, decay=0.0, nesterov=True)
+		self.model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
+		self.model.fit(X, X, epochs = 1000, batch_size=32, shuffle=True, validation_split=0.1)
 
 
 	'''

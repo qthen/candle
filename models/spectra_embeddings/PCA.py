@@ -1,11 +1,14 @@
 # PCA implementation to reduce star spectra
 from sklearn.decomposition import PCA
 from models.spectra_embeddings.Embedding import Embedding
+import pickle
 
 '''
 Spectra embedding via PCA
 '''
 class SpectralEmbeddingPCA(Embedding):
+
+	MODEL_FILEPATH = "models/spectra_embeddings/PCA.pickle"
 
 	'''
 	Constructs PCA for dimensionality reduction of the spectral data
@@ -28,4 +31,21 @@ class SpectralEmbeddingPCA(Embedding):
 	'''
 	def embed(self, X): 
 		return self.PCA.transform(X)
+
+	'''
+	Saves the current PCA trained into a pickle
+	'''
+	def save(self):
+		pickle_out = open(SpectralEmbeddingPCA.MODEL_FILEPATH, 'wb')
+		pickle.dump(self.PCA, pickle_out)
+		pickle_out.close()
+
+	'''
+	Load the PCA using a pickle
+	'''
+	def load(self):
+		pickle_out = open(SpectralEmbeddingPCA.MODEL_FILEPATH, 'rb')
+		self.PCA = pickle.load(pickle_out)
+
+
 		

@@ -79,3 +79,8 @@ plt.show()
 
 This will return a visualization like
 ![Classifications](/plots/readme/fig1.png)
+
+## Acknowledgements
+
+1. Keras team - <a href="https://github.com/keras-team/keras">Keras</a>
+2. <a href="https://github.com/henrysky">Henry Leung</a>, <a href="https://github.com/jobovy">Jo Bovy</a> - <a href="https://github.com/henrysky/astroNN">AstroNN</a>

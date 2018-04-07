@@ -1,5 +1,6 @@
 from keras.models import load_model
 from models.spectra_embeddings.NormalizedPCA import NormalizedSpectralEmbeddingPCA
+import numpy as np
 import pickle
 
 
@@ -12,17 +13,17 @@ Anything outside is considered to be a not RC star (often times, a RGB in the ca
 Then runs a 2 hidden layer neural network on the stars inside the cut
 '''
 
-class Candle():
+class Candle(object):
 
 	# File paths to pretrained models
 	APOGEE_MODEL_FP = "models/regression/ApogeeNN.h5"
 	IMPROVED_NN_MODEL_FP = "models/classification/ImprovedNN.h5"
 
 	# Constants for the mean and std Teff and logg from ApogeNN
-	TEFF_MEAN = 0.0
-	TEFF_STD = 1.0
-	LOGG_MEAN = 0.0
-	LOGG_STD = 1.0
+	TEFF_MEAN = 4585.5703125
+	TEFF_STD = 383.7852783203125
+	LOGG_MEAN = 2.2114694118499756
+	LOGG_STD = 0.7215081453323364
 
 	# Constants for the cuts
 	MAX_RC_TEFF = 5500.0
@@ -31,17 +32,17 @@ class Candle():
 	MIN_RC_LOGG = 2.0
 
 	# Constants for the cuts normalized
-	MAX_RC_TEFF_NORM = (Candle.MAX_RC_TEFF - TEFF_MEAN)/TEFF_STD
-	MIN_RC_TEFF_NORM = (Candle.MIN_RC_TEFF - TEFF_MEAN)/TEFF_STD
-	MAX_RC_LOGG_NORM = (Candle.MAX_RC_LOGG - LOGG_MEAN)/LOGG_STD
-	MIN_RC_LOGG_NORM = (Candle.MIN_RC_LOGG - LOGG_MEAN)/LOGG_STD
+	MAX_RC_TEFF_NORM = (MAX_RC_TEFF - TEFF_MEAN)/TEFF_STD
+	MIN_RC_TEFF_NORM = (MIN_RC_TEFF - TEFF_MEAN)/TEFF_STD
+	MAX_RC_LOGG_NORM = (MAX_RC_LOGG - LOGG_MEAN)/LOGG_STD
+	MIN_RC_LOGG_NORM = (MIN_RC_LOGG - LOGG_MEAN)/LOGG_STD
 
 	'''
 	Initializes the model with two helper models, ApogeeNN for Teff, logg regression and ImprovedNN for classification and one spectra embedder model
 	'''
 	def __init__(self):
 		# Load the spectra embedder for dimensionality reduction
-		self.spectra_embedder = NormalizedSpectralEmbeddingPCA(S_D =50)
+		self.spectra_embedder = NormalizedSpectralEmbeddingPCA(E_D =50)
 		self.spectra_embedder.load()
 
 		# Load regression and classification models
@@ -79,10 +80,10 @@ class Candle():
 		probabilities = np.zeros((N,))
 
 		# Apply the cut - these are the areas the network knows the best and the theoretical areas of RCs
-		desired_idx = [1 for i in range(0, N) if if teff[i] <= Candle.MAX_RC_TEFF_NORM and teff[i] >= Candle.MIN_RC_TEFF_NORM and logg[i] <= Candle.MAX_RC_LOGG_NORM and logg[i] >= Candle.MIN_RC_LOGG_NORM]
+		desired_idx = [i for i in range(0, N) if teff[i] <= Candle.MAX_RC_TEFF_NORM and teff[i] >= Candle.MIN_RC_TEFF_NORM and logg[i] <= Candle.MAX_RC_LOGG_NORM and logg[i] >= Candle.MIN_RC_LOGG_NORM]
 
 		# Apply the predictions on desired_idx
-		probabilities[desired_idx] = self.improved_nn.predict(X[desired_idx])
+		probabilities[desired_idx] = self.improved_nn.predict(X[desired_idx]).flatten()
 
 		# Return probabilities
 		return probabilities
@@ -107,3 +108,4 @@ class Candle():
 		purity - The percentage of stars that are RC
 	'''
 	def purity(self):
+		pass

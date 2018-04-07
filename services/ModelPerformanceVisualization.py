@@ -109,15 +109,19 @@ Input:
 	ground_truth - Ground truth for labels
 	probabilities - Predicted probabilities of labels
 	title - The title of the scatter plot
+	teff_max - The max temperature
+	teff_min - The min temperature
+	logg_max - Max surface gravity
+	logg_min - Min surface gravity
 '''
-def plot_binary_classification(logg, teff, ground_truth, probabilities, title="Binary Classification"):
+def plot_binary_classification(logg, teff, ground_truth, probabilities, title="Binary Classification", teff_max = 5200, teff_min = 4500, logg_max = 3.5, logg_min = 2.25):
 	rc_stars = np.array([[teff[i], logg[i]] for i in range(0, min(len(logg), len(teff))) if ground_truth[i] == 1 and probabilities[i] >= 0.5])
 	rgb_stars = np.array([[teff[i], logg[i]] for i in range(0, min(len(logg), len(teff))) if ground_truth[i] == 0 and probabilities[i] < 0.5])
 	rc_stars_misclassified = np.array([[teff[i], logg[i]] for i in range(0, min(len(logg), len(teff))) if ground_truth[i] == 1 and probabilities[i] < 0.5])
 	rgb_stars_misclassified = np.array([[teff[i], logg[i]] for i in range(0, min(len(logg), len(teff))) if ground_truth[i] == 0 and probabilities[i] >= 0.5])
 	plt.title(title)
-	plt.xlim(5200, 4500)
-	plt.ylim(3.5, 2.25)
+	plt.xlim(teff_max, teff_min)
+	plt.ylim(logg_max, logg_min)
 	rc_ax = plt.scatter(rc_stars[:,0], rc_stars[:,1], color="#F89406", alpha=0.05)
 	rgb_ax = plt.scatter(rgb_stars[:,0], rgb_stars[:,1], color="#F03434", alpha=0.05)
 	rgb_ax_mis = plt.scatter(rgb_stars_misclassified[:,0], rgb_stars_misclassified[:,1], color="#F03434", alpha=1, marker='v')
@@ -126,6 +130,27 @@ def plot_binary_classification(logg, teff, ground_truth, probabilities, title="B
 	else:
 		rc_ax_mis = plt.scatter(rc_stars_misclassified[:,0], rc_stars_misclassified[:,1], color="#F89406", alpha=1, marker='^')
 	plt.legend((rc_ax, rgb_ax, rgb_ax_mis, rc_ax_mis), ('RC stars classified correctly', 'RGB stars classified correctly', 'RGB stars mislassified', 'RC stars misclassified'))
+
+'''
+Plot classifications
+
+Given teffs, loggs and an array of probabilities and a threshold, plots the classifications there the probability is p(x = red clump)
+Inputs:
+	teff - (n, ) ndarray of temperature
+	logg - (n, ) ndarray of logg
+	probabilities - (n, ) ndarray of probabilities
+'''
+def plot_classifications(teff, logg, probabilities, threshold = 0.5, title="Model classification on APOGEE stars"):
+	N = len(probabilities)
+	rc_idx = [i for i in range(0, N) if probabilities[i] >= threshold]
+	rgb_idx = [i for i in range(0, N) if probabilities[i] < threshold]
+	rgb_ax = plt.scatter(teff[rgb_idx], logg[rgb_idx], marker='v', color="#F03434", alpha=0.3)
+	rc_ax = plt.scatter(teff[rc_idx], logg[rc_idx], color="#F89406", alpha=0.3)
+	plt.legend((rc_ax, rgb_ax), ('RGB', 'RC'))
+	plt.xlim(5400, 3500)
+	plt.ylim(4.5, 0)
+	plt.title(title)
+
 
 '''
 Plots the predicted PS with the truth PS

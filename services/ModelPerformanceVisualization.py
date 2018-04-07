@@ -146,9 +146,11 @@ def plot_classifications(teff, logg, probabilities, threshold = 0.5, title="Mode
 	rgb_idx = [i for i in range(0, N) if probabilities[i] < threshold]
 	rgb_ax = plt.scatter(teff[rgb_idx], logg[rgb_idx], marker='v', color="#F03434", alpha=0.3)
 	rc_ax = plt.scatter(teff[rc_idx], logg[rc_idx], color="#F89406", alpha=0.3)
-	plt.legend((rc_ax, rgb_ax), ('RGB', 'RC'))
+	plt.legend((rc_ax, rgb_ax), ('RC', 'RGB'))
 	plt.xlim(5400, 3500)
 	plt.ylim(4.5, 0)
+	plt.xlabel("T_eff - Effective temperature")
+	plt.ylabel("log(g) - Surface gravity")
 	plt.title(title)
 
 

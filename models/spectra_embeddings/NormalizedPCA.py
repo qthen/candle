@@ -20,7 +20,7 @@ class NormalizedSpectralEmbeddingPCA(Embedding):
 	Constructs PCA for dimensionality reduction of the spectral data
 	E_D - The embedding dimension
 	'''
-	def __init__(self, E_D = 10):
+	def __init__(self, E_D = 50):
 		self.E_D = E_D
 		self.scaler = StandardScaler()
 		self.PCA = PCA(n_components=E_D)
